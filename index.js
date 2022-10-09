@@ -44,20 +44,57 @@ const getSections = async () => {
 
 // Prompt user for section info
 const getInfo = async (section) => {
-    const infoInput = await inquirer.prompt([
-        {
-            type: "input",
-            name: section,
-            message: `Enter info for ${section}`,
-        }
-    ]
-    );
+    let infoInput;
+
+    if(section === "license") {
+        infoInput = await inquirer.prompt([
+            {
+                type: "list",
+                name: section,
+                message: `Enter info for ${section}`,
+                choice: [
+                    "MIT License",
+                    "Apache License 2.0",
+                    "BSD 2-Clause 'Simplified' License",
+                    "BSD-3-Clause 'New' or 'Revised' License",
+                    "Boost Software License 1.0",
+                    "Creative Commons Zero v1.0 Universal",
+                    "Eclipse Public License 2.0",
+                    "GNU Alfero Genearl Public Licnse v3.0",
+                    "GNU Genearl Public License v2.0",
+                    "GNU Lesser General Public License v2.1",
+                    "Mozilla Public License 2.0",
+                    "The Unlicense"
+                ],
+            }
+        ]);
+    } else {
+        infoInput = await inquirer.prompt([
+            {
+                type: "input",
+                name: "info",
+                message: `Enter info for ${section}`,
+            }
+        ]);
+    }
     return infoInput;
 }
 
 
 // TODO: Create a function to write README file
-function writeToFile(fileName, data) { }
+function writeToFile(fileName, data) { 
+    if(markDownObj && markDownObj.length > 0){
+        // Set file name to lowercase and remove spaces
+        // let fileName = fileName.toLowercase().split(' ').join('');
+
+        // Generate Markdown
+        data = md.generateMarkdown(data)
+        // Append data to markdown
+        fs.appendFile(fileName, data, (err) => {
+            err ? console.log(err) : ""
+        });
+    }
+}
 
 // TODO: Create a function to initialize app
 async function init() {
@@ -65,10 +102,10 @@ async function init() {
 
     for (const section of sections.sections) {
         let info = await getInfo(section);
+        info = {title: section, info: Object.values(info)}
         markDownObj.push(info)
     }
-
-    console.log(markDownObj)
+    writeToFile("README.md", markDownObj)
 }
 
 // Function call to initialize app
