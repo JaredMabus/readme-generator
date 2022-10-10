@@ -89,8 +89,8 @@ const getInfo = async (section) => {
 function writeToFile(fileName, data) {
     if (project.meta.sections && project.meta.sections.length > 0) {
         // Remove old README file
-        if (fs.existsSync("./README.md")) {
-            fs.unlinkSync("./README.md");
+        if (fs.existsSync("./assets/README.md")) {
+            fs.unlinkSync("./assets/README.md");
         }
 
         // Append text to README
@@ -120,7 +120,7 @@ async function init() {
     let markDownString = md.generateMarkdown(project);
 
     // Append md string to README file
-    writeToFile("README.md", markDownString)
+    writeToFile("./assets/README.md", markDownString)
 }
 
 // Function call to initialize app
