@@ -3,23 +3,29 @@ const md = require('./utils/generateMarkdown');
 const fs = require("fs");
 const inquirer = require("inquirer");
 
-const markDownObj = [];
+// Project object to store meta data and mdObj
+const project = {
+    meta: [],
+    mdObj: [],
+};
 
-/*
- [
-    title: {
-        header: # <name-of-project>
-    },
-    description: {
-        header: ## Description,
-        info: ["This is the des"]
-    },
- ] 
- */
-
-
-// TODO: Create an array of questions for user input
+// Array of questions for project meta data
 const questions = [
+    {
+        type: "input",
+        name: "title",
+        message: "Enter the name of the project:",
+    },
+    {
+        type: "input",
+        name: "user",
+        message: "Enter your GitHub user name:",
+    },
+    {
+        type: "input",
+        name: "email",
+        message: "Enter your email address:",
+    },
     {
         type: "checkbox",
         name: "sections",
@@ -38,7 +44,6 @@ const questions = [
 // Prompt user for sections
 const getSections = async () => {
     const sections = await inquirer.prompt(questions);
-    // console.log(sections);
     return sections;
 }
 
@@ -46,13 +51,13 @@ const getSections = async () => {
 const getInfo = async (section) => {
     let infoInput;
 
-    if(section === "license") {
+    if (section === "license") {
         infoInput = await inquirer.prompt([
             {
                 type: "list",
-                name: section,
-                message: `Enter info for ${section}`,
-                choice: [
+                name: "license",
+                message: `Choose the license type?`,
+                choices: [
                     "MIT License",
                     "Apache License 2.0",
                     "BSD 2-Clause 'Simplified' License",
@@ -73,39 +78,49 @@ const getInfo = async (section) => {
             {
                 type: "input",
                 name: "info",
-                message: `Enter info for ${section}`,
+                message: `Enter info for section '${section}'`,
             }
         ]);
     }
     return infoInput;
 }
 
+// Write README file
+function writeToFile(fileName, data) {
+    if (project.meta.sections && project.meta.sections.length > 0) {
+        // Remove old README file
+        if (fs.existsSync("./README.md")) {
+            fs.unlinkSync("./README.md");
+        }
 
-// TODO: Create a function to write README file
-function writeToFile(fileName, data) { 
-    if(markDownObj && markDownObj.length > 0){
-        // Set file name to lowercase and remove spaces
-        // let fileName = fileName.toLowercase().split(' ').join('');
-
-        // Generate Markdown
-        data = md.generateMarkdown(data)
-        // Append data to markdown
+        // Append text to README
         fs.appendFile(fileName, data, (err) => {
-            err ? console.log(err) : ""
+            err ? console.log(err) : console.log("README file created!")
         });
     }
 }
 
-// TODO: Create a function to initialize app
+// Initialize app function
 async function init() {
-    const sections = await getSections();
+    // Get meta data for project
+    const projectInfo = await getSections();
+    project.meta = projectInfo;
 
-    for (const section of sections.sections) {
+    // Get info for each section
+    for (const section of projectInfo.sections) {
         let info = await getInfo(section);
-        info = {title: section, info: Object.values(info)}
-        markDownObj.push(info)
+        if (section === "license") {
+            project.meta.license = info.license
+        }
+        info = { header: section, info: Object.values(info) }
+        project.mdObj.push(info)
     }
-    writeToFile("README.md", markDownObj)
+
+    // Generate markdown string
+    let markDownString = md.generateMarkdown(project);
+
+    // Append md string to README file
+    writeToFile("README.md", markDownString)
 }
 
 // Function call to initialize app
